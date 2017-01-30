@@ -1,0 +1,15 @@
+{ 
+	"portfolioName": "HN1",
+	"portfolioId": "101172035",
+	"filters":{
+	"term": "<=36",
+	"grade": "==B",
+	"grade": "==C",
+	"annualInc": ">=70000",
+	"dti": "<20",
+	"empLength": ">=24",
+	"installment": "<=500",
+	"pubRec": "==0",
+	"mthsSinceLastDelinq": "==0"
+	}
+}

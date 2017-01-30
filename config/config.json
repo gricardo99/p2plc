@@ -1,0 +1,4 @@
+{ 
+	"baseUrl": "https://api.lendingclub.com/api/investor/", 
+	"apiVer": "v1"
+}
