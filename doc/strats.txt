@@ -1,0 +1,5 @@
+https://news.ycombinator.com/item?id=12317253
+
+user:	seibelj 
+C or B only. 3 years only. Minimum income 70k. No defaults, late payments, public records, collections, etc. (not a single one! even from 5 years ago!). DTI no higher than 70. Do not lend for medical, business, or wedding. No monthly payment higher than $500. No one with less than 2 years at current job.
+If you want to do the machine learning analysis, go ahead, you'll come to the same result I did. This is optimized for minimal defaults while still getting a solid return (~10%).
