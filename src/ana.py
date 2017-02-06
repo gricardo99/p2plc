@@ -17,6 +17,7 @@ info = netrc.netrc()
 config['investorId'], account, config['apiKey'] = info.authenticators("api.lendingclub.com")
 acct_suffix_url = '/accounts/' + config['investorId'];
 myheaders = {'Authorization': config['apiKey'], 'content-type': 'application/json'}
+maxorders = 1
 
 portfolio_path = "config/portfolio/"
 port_l = []
@@ -50,16 +51,23 @@ def gen_order( portf,loan ):
 
 def all_orders(portf_name,loans):
 	po = parent_order()
+	num_orders = 0
 	for p in config['portfolios']:
  		if (p['portfolioName']==portf_name):
 			portf_id = p['portfolioId']
 			break
+	done = False
 	for index, row in loans.iterrows():
 		po += gen_order(portf_id,row)
-		if (index<len(loans)-1):
+		num_orders += 1
+		if (num_orders>=maxorders):
+			done = True
+		if (index<len(loans)-1) and not done:
 			po += ',\n'
 		else:
 			po += '\n'
+		if (done):
+			break
 	po += '\t]\n'
 	po += '}'
 	return po
@@ -75,6 +83,7 @@ def create_portf(name,desc):
 
 file_name = "data/pandas/2017.01.30/newmatch_10AM_01:02.pkl"
 file_name = "data/pandas/2017.02.04/newmatch_06AM_01:02.pkl"
+file_name = "data/pandas/2017.01.30/newlisted_02PM_00:02.pkl"
 
 lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
 appended_data = []
@@ -115,5 +124,11 @@ print payload
 #print payload
 #r = req.post(portf_url, headers=myheaders, data=json.dumps(payload))
 
+with open('data/test/order_resp.json') as data_file:    
+    resp_ord = json.load(data_file)
+
+conf_df = json_normalize(resp_ord['orderConfirmations'])
+conf_len = len(conf_df['executionStatus'])
+conf_df['orderInstructId'] = pd.Series(resp_ord['orderInstructId']*conf_len, index=conf_df.index)
 
 

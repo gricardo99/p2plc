@@ -1,15 +1,5 @@
 { 
 	"portfolioName": "HN1",
 	"portfolioId": "101172035",
-	"filters":{
-	"term": "<=36",
-	"grade": "==B",
-	"grade": "==C",
-	"annualInc": ">=70000",
-	"dti": "<20",
-	"empLength": ">=24",
-	"installment": "<=500",
-	"pubRec": "==0",
-	"mthsSinceLastDelinq": "==0"
-	}
+	"query": "((term<=36) and ((grade == \"B\") or (grade == \"C\")) and (annualInc>=70000) and (dti<=20) and (empLength>=24) and (installment<=500) and (pubRec==0) and (not (mthsSinceLastDelinq > 0)))"
 }

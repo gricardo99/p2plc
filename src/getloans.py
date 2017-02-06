@@ -96,18 +96,19 @@ print sum_url
 print headers
 r = session.get(sum_url, headers=headers)
 print r
+lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
 loanlist_url = get_url(0,'loans/listing');
 loan_list = session.get(loanlist_url, headers=headers)
 mydf = json_normalize(loan_list.json()['loans'])
 
-
-lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
-
-resdf = mydf.query('(term<=36) and ((grade == "B") or (grade == "C")) and (annualInc>=70000) and (dti<=20) and (empLength>=24) and (installment<=500) and (pubRec==0) and (not (mthsSinceLastDelinq > 0))');
-
 newlisted_f = "newlisted_" + release_tm + ".pkl";
-newmatch_f = "newmatch_" + release_tm + ".pkl";
-
 mydf.to_pickle(dirname + '/' + newlisted_f) 
-resdf.to_pickle(dirname + '/' + newmatch_f) 
+
+for pf in config['portfolios']:
+	port_match = mydf.query(pf['query'])
+	portmatch_f = dirname + "/" + pf['portfolioName'].lower() + "_" + release_tm + ".pkl";
+	if not port_match.empty:
+		port_match.to_pickle(portmatch_f) 
+	else:
+		open(portmatch_f, 'a').close()
 
