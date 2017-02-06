@@ -76,19 +76,24 @@ def create_portf(name,desc):
 file_name = "data/pandas/2017.01.30/newmatch_10AM_01:02.pkl"
 file_name = "data/pandas/2017.02.04/newmatch_06AM_01:02.pkl"
 
-#df = pd.read_pickle(file_name)
-df.sort(['intRate','installment'],ascending=[False,False],inplace=True)
-df.reset_index(drop=True, inplace=True)
-
+lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
+appended_data = []
 rdpath = 'data/pandas/'
 for ddir in os.listdir(rdpath):
 	dpath = rdpath + ddir	
 	for filename in os.listdir(dpath):
 		if filename.endswith(".pkl") and (("newmatch") in filename): 
 			df_file = os.path.join(dpath, filename)
+			print df_file
 			cur_df = pd.read_pickle(df_file)
-			df.append(cur_df, ignore_index=True)
+			if not cur_df.empty:
+				print cur_df
+				appended_data.append(cur_df)
 
+df = pd.concat(appended_data) 
+df.drop_duplicates(['id'], take_last=True,inplace=True)
+df.sort_values(['intRate','installment'],ascending=[False,False],inplace=True)
+df.reset_index(drop=True, inplace=True)
 order_url = get_url(1,'orders')
 print "order_url:" + order_url
 payload = all_orders('HN1',df)
