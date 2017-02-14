@@ -7,6 +7,13 @@ import glob
 import time
 import netrc
 
+import logging
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M',
+                    filename='log/getloans.log')
+
+
 from pandas.io.json import json_normalize
 
 with open('config/config.json', 'r') as f:
@@ -48,7 +55,7 @@ def gen_order( portf,loan ):
 	return res
 
 
-def all_orders(portf_name,loans):
+def all_orders(portf_name,loans,max_buy):
 	po = parent_order()
 	for p in config['portfolios']:
  		if (p['portfolioName']==portf_name):
@@ -56,10 +63,12 @@ def all_orders(portf_name,loans):
 			break
 	for index, row in loans.iterrows():
 		po += gen_order(portf_id,row)
-		if (index<len(loans)-1):
+		if (index<len(loans)-1) and (index<max_buy-1):
 			po += ',\n'
 		else:
 			po += '\n'
+		if (index<max_buy):
+			break
 	po += '\t]\n'
 	po += '}'
 	return po
@@ -74,9 +83,9 @@ def create_portf(name,desc):
 
 
 file_name = "data/pandas/2017.01.30/newmatch_10AM_01:02.pkl"
-file_name = "data/pandas/2017.02.04/newmatch_06AM_01:02.pkl"
+file_name = "data/pandas/2017.02.10/hr1_02PM_00:02.pkl"
 
-#df = pd.read_pickle(file_name)
+df = pd.read_pickle(file_name)
 df.sort(['intRate','installment'],ascending=[False,False],inplace=True)
 df.reset_index(drop=True, inplace=True)
 
@@ -91,9 +100,10 @@ for ddir in os.listdir(rdpath):
 
 order_url = get_url(1,'orders')
 print "order_url:" + order_url
-payload = all_orders('HN1',df)
+payload = all_orders('HN1',df,1)
 
 print payload
+logging.debug("order payload: %s",payload)
 #r = req.post(order_url, headers=myheaders,data=payload)
 
 #hn1_desc = "https://news.ycombinator.com/item?id=12320256"

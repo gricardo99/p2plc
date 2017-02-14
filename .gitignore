@@ -1,5 +1,7 @@
 # data downloads
 data/*
+# log/debug
+log/*
 
 # Compiled source #
 ###################
