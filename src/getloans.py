@@ -10,6 +10,9 @@ import netrc
 
 import logging
 
+import sys, getopt
+
+
 # These two lines enable debugging at httplib level (requests->urllib3->http.client)
 # You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
 # The only thing missing will be the response.body which is not logged.
@@ -52,6 +55,25 @@ def get_url( acct,action ):
                 suf = ''
         return base_url + suf + "/" + action;
 
+def get_loan_list_file(file_name):
+	return pd.read_pickle(file_name)
+
+def get_loan_list():
+	loanlist_url = get_url(0,'loans/listing');
+	loan_list = session.get(loanlist_url, headers=headers)
+	if (loan_list.status_code == 200):
+		loans_j = loan_list.json()
+		if 'loans' in loans_j:
+			mydf = json_normalize(loan_list.json()['loans'])
+			return mydf
+		else:
+			logging.debug("No loans listed!");
+			logging.debug(loans_j);
+			sys.exit ()
+	else:
+		logging.debug("get loan list returned status code:%d",loan_list.status_code)
+		sys.exit ()
+
 
 def parent_order():
         res = '{ \n'
@@ -65,6 +87,42 @@ def gen_order( portf,loan ):
         res += '\t"requestedAmount":25.0,\n' 
         res += '\t"portfolioId":'+ portf + '\n\t}'
         return res
+
+def add_orders(ords,portf_name,loans,max_buy):
+	if (ords == ""):
+		ords = parent_order()
+	else:
+		ords += ',\n'
+        for p in config['portfolios']:
+                if (p['portfolioName']==portf_name):
+                        portf_id = p['portfolioId']
+                        break
+        for index, row in loans.iterrows():
+                ords += gen_order(portf_id,row)
+                if (index<len(loans)-1) and (index<max_buy-1):
+                        ords += ',\n'
+                if (index<max_buy):
+                        break
+	return ords
+
+def send_orders(ords,ords_logfile):
+        ords += '\t]\n'
+        ords += '}'
+	order_payload_name = "log/" + cur_date + "/orders.json"
+	order_resp_name = "log/" + cur_date + "/resp.json"
+	logging.debug("order_payload_name:%s",ords_logfile)
+	logging.debug("order_resp_name:%s",order_resp_name)
+	pyld_f = open(ords_logfile, 'w')
+	resp_f = open(order_resp_name, 'w')
+	logging.debug("created order and resp files.");
+	order_url = get_url(1,'orders')
+	logging.debug("order_url:%s",order_url)
+	logging.debug("order payload:%s",ords)
+	json.dump(ords,pyld_f)
+	ordresp = session.post(order_url, headers=headers, data=ords)
+	logging.debug("ordresp:%s",ordresp)
+	json.dump(ordresp.json(),resp_f)
+	return ordresp
 
 
 def all_orders(portf_name,loans,max_buy):
@@ -85,24 +143,42 @@ def all_orders(portf_name,loans,max_buy):
         po += '}'
         return po
 
+try:
+	opts, args = getopt.getopt(sys.argv[1:],"ts:",["test","datasrc="])
+except getopt.GetoptError:
+	print 'getloans.py <-t> '
+	sys.exit(2)
+
+testmode = False
+datasrc = 'url'
+
+for opt, arg in opts:
+	if opt == '-t':
+		testmode = True
+	if opt == '-s':
+		datasrc = arg
+
 cur_date = time.strftime("%Y.%m.%d")
 release_tm =  time.strftime("%I%p_%M:%S")
-
 dirname = "data/pandas/" + cur_date
+logname = "log/" + cur_date
+
+if testmode:
+	cur_data = ""
+	realease_tm = ""
+	dirname = "data/test"
+	logname = "log/test"
+
+order_payload_name = logname + "/orders.json"
 if not os.path.exists(dirname):
     os.makedirs(dirname)
-
-logname = "log/" + cur_date
 if not os.path.exists(logname):
     os.makedirs(logname)
-
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
                     datefmt='%m-%d %H:%M',
                     filename=logname + '/getloans.log')
-
-
 
 session = requests.Session()
 session.trust_env = False
@@ -112,33 +188,27 @@ session.trust_env = False
 #r = session.get(sum_url, headers=headers)
 #print r
 lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
-loanlist_url = get_url(0,'loans/listing');
-loan_list = session.get(loanlist_url, headers=headers)
-mydf = json_normalize(loan_list.json()['loans'])
 
-newlisted_f = "newlisted_" + release_tm + ".pkl";
-mydf.to_pickle(dirname + '/' + newlisted_f) 
+if datasrc == 'url':
+	mydf = get_loan_list()
+if datasrc == 'file':
+	file_name = "data/pandas/2017.02.15/newlisted_02PM_00:01.pkl"
+	mydf = get_loan_list_file(file_name)
+
+if datasrc != 'file':
+	newlisted_f = "newlisted_" + release_tm + ".pkl";
+	mydf.to_pickle(dirname + '/' + newlisted_f) 
+all_ords = ""
 
 for pf in config['portfolios']:
 	port_match = mydf.query(pf['query'])
 	portmatch_f = dirname + "/" + pf['portfolioName'].lower() + "_" + release_tm + ".pkl";
 	if not port_match.empty:
-		order_payload_name = "log/" + cur_date + "/" + pf['portfolioName'].lower() + "_orders.json"
-		order_resp_name = "log/" + cur_date + "/" + pf['portfolioName'].lower() + "_resp.json"
-		logging.debug("order_payload_name:%s",order_payload_name)
-		logging.debug("order_resp_name:%s",order_resp_name)
 		if (not os.path.exists(order_payload_name)):
-			pyld_f = open(order_payload_name, 'w')
-			resp_f = open(order_resp_name, 'w')
-			logging.debug("created order and resp files. portfolio:%s",pf['portfolioName']);
 			port_match.sort(['intRate','dti'],ascending=[False,True],inplace=True)
 			port_match.reset_index(drop=True, inplace=True)
-			order_url = get_url(1,'orders')
-			logging.debug("order_url:%s",order_url)
-			payload = all_orders(pf['portfolioName'],port_match,1)
-			logging.debug("payload:%s",payload)
-			json.dump(payload,pyld_f)
-			#ordresp = session.post(order_url, headers=headers, data=json.dump(payload))
+			logging.debug("gen orders for port:%s",pf['portfolioName'])
+			all_ords = add_orders(all_ords,pf['portfolioName'],port_match,1)
 		else:
 			logging.debug("skipping orders for portfolio:%s",pf['portfolioName']);
 		port_match.to_pickle(portmatch_f) 
@@ -147,3 +217,14 @@ for pf in config['portfolios']:
 		logging.debug("skipping orders, no matches for portfolio:%s",pf['portfolioName']);
 		open(portmatch_f, 'a').close()
 
+if (all_ords!=""):
+	ord_resp = send_orders(all_ords,order_payload_name)
+	logging.debug("order status_code:%s",ord_resp.status_code);
+	if ord_resp.status_code == 200:
+		logging.debug("order success");
+		logging.debug(ord_resp.json());
+	else:
+		logging.debug("order failed!");
+		logging.debug(ord_resp.json());
+
+logging.debug("Exit. Done.");
