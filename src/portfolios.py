@@ -5,8 +5,10 @@ import logging
 
 default_portfolio_cfg_path = "config/portfolio/"
 save_path = "data/state/"
-loan_ids_f = "loan_ids.json"
-member_ids_f = "member_ids.json"
+loan_ids_fn = "loan_ids.json"
+loan_ids_f = save_path + loan_ids_fn
+member_ids_fn = "member_ids.json"
+member_ids_f = save_path + member_ids_fn
 
 all_loan_ids = []
 all_member_ids = []
@@ -20,22 +22,27 @@ def load_id_file(id_f):
 
 def save_id_file(id_f,new_l):
 	cur_list = load_id_file(id_f)
-	if len(new_l)<=len(cur_list):
+	if len(new_l)<len(cur_list):
 		logging.debug("This is an error. length of new list should be longer.  File:%s",id_f) 
 		return
 	with open(id_f, 'w') as f:
 		json.dump(new_l,f)
 
-def load_portfolios(loan_file=loan_ids_f,mem_file=member_ids_f,config_path=default_portfolio_cfg_path):
+def load_portfolios(config_path=default_portfolio_cfg_path):
 	for fn in glob.glob(config_path + "*.json"):
 		port_name = (os.path.splitext(os.path.basename(fn))[0]).upper()
 		with open(fn, 'r') as f:
 			cur_port = json.load(f)
 			pfls[port_name] = cur_port
-	loan_ids_f = save_path + loan_file
-	all_loan_ids = load_id_file(loan_ids_f)
-	member_ids_f = save_path + mem_file
-	all_member_ids = load_id_file(member_ids_f)
+	loan_ids_f = save_path + loan_ids_fn
+	global all_loan_ids
+	all_loan_ids += load_id_file(loan_ids_f)
+	logging.debug("loaded:%s",loan_ids_f)
+	logging.debug("all_loan_ids:")
+	logging.debug(all_loan_ids)
+	global all_member_ids
+	member_ids_f = save_path + member_ids_fn
+	all_member_ids += load_id_file(member_ids_f)
 	return pfls
 
 

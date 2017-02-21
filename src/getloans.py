@@ -116,7 +116,7 @@ if testmode:
 	realease_tm = ""
 	dirname = "data/test"
 	logname = "log/test"
-	portfolios.save_path = dirname
+	portfolios.save_path = dirname + "/"
 
 order_payload_name = logname + "/orders.json"
 order_resp_name = logname + "/resp.json"

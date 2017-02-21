@@ -7,7 +7,7 @@ import glob
 import time
 import netrc
 
-from config import
+import config 
 
 from pandas.io.json import json_normalize
 
@@ -23,7 +23,8 @@ def create_portf(name,desc):
 
 file_name = "data/pandas/2017.01.30/newmatch_10AM_01:02.pkl"
 file_name = "data/pandas/2017.02.04/newmatch_06AM_01:02.pkl"
-file_name = "data/pandas/2017.01.30/newlisted_02PM_00:02.pkl"
+file_name = "data/pandas/2017.02.20/newlisted_06AM_00:02.pkl"
+file_name = "data/pandas/2017.02.17/newlisted_02PM_00:01.pkl"
 
 lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose','annualInc','dti','empLength']
 appended_data = []
