@@ -1,5 +1,9 @@
 { 
 	"portfolioName": "HN1",
-	"portfolioId": "101172035",
-	"query": "((term<=36) and ((grade == \"B\") or (grade == \"C\")) and (annualInc>=70000) and (dti<=20) and (empLength>=24) and (installment<=500) and (pubRec==0) and (not (mthsSinceLastDelinq > 0)))"
+	"portfolioId": 101172035,
+	"maxDayOrders": 1,
+	"orderAmount": 25,
+	"excludeSameMember": "True",
+	"excludeSameLoan": "True",
+	"query": "((term<=36) and (intRate > 9) and ((grade == \"B\") or (grade == \"C\")) and (annualInc>=70000) and (dti<=20) and (empLength>=24) and (installment<=500) and (pubRec==0) and (not (mthsSinceLastDelinq > 0)))"
 }

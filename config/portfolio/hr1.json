@@ -1,5 +1,9 @@
 { 
 	"portfolioName": "HR1",
-	"portfolioId": "101192064",
-	"query": "((term<=36) and ((grade == \"C\") or (grade == \"D\") or (grade == \"E\")) and (annualInc>=50000) and (dti<=40) and (empLength>=18) and (installment<=400) and (accNowDelinq==0) and (inqLast6Mths == 0) and ((purpose == \"credit_card\") or (purpose == \"debt_consolidation\")))"
+	"portfolioId": 101192064,
+	"maxDayOrders": 1,
+	"orderAmount": 25,
+	"excludeSameMember": "True",
+	"excludeSameLoan": "True",
+	"query": "((term<=36) and (intRate > 17) and ((grade == \"C\") or (grade == \"D\") or (grade == \"E\")) and (annualInc>=50000) and (dti<=40) and (empLength>=18) and (installment<=400) and (accNowDelinq==0) and (inqLast6Mths == 0) and ((purpose == \"credit_card\") or (purpose == \"debt_consolidation\")))"
 }

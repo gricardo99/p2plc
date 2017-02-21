@@ -1,4 +1,5 @@
 { 
 	"baseUrl": "https://api.lendingclub.com/api/investor/", 
-	"apiVer": "v1"
+	"apiVer": "v1",
+	"portfolioConfigPath": "config/portfolio/"
 }

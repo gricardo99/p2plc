@@ -7,70 +7,10 @@ import glob
 import time
 import netrc
 
+from config import
+
 from pandas.io.json import json_normalize
 
-with open('config/config.json', 'r') as f:
-    config = json.load(f)
-
-base_url = config['baseUrl']  + config['apiVer'];
-info = netrc.netrc()
-config['investorId'], account, config['apiKey'] = info.authenticators("api.lendingclub.com")
-acct_suffix_url = '/accounts/' + config['investorId'];
-myheaders = {'Authorization': config['apiKey'], 'content-type': 'application/json'}
-maxorders = 1
-
-portfolio_path = "config/portfolio/"
-port_l = []
-config['portfolios'] = []
-for file in glob.glob(portfolio_path + "*.json"):
-	port_name = (os.path.splitext(os.path.basename(file))[0]).upper();
-	with open(file, 'r') as f:
-		cur_port = json.load(f)
-		config['portfolios'].append(cur_port)
-
-def get_url( acct,action ):
-	if (acct) :
-		suf = acct_suffix_url
-	else :
-		suf = ''
-	return base_url + suf + "/" + action;
-
-def parent_order():
-	res = '{ \n'
-	res += '\t"aid":' + config['investorId'] + ',\n'
-	res += '\t"orders":[\n'
-	return res
-
-def gen_order( portf,loan ):
-	res = '\t{ '
-	res += '\t"loanId":' + str(loan[['id']].item()) + ',\n'
-	res += '\t"requestedAmount":25.0,\n' 
-	res += '\t"portfolioId":'+ portf + '\n\t}'
-	return res
-
-
-def all_orders(portf_name,loans):
-	po = parent_order()
-	num_orders = 0
-	for p in config['portfolios']:
- 		if (p['portfolioName']==portf_name):
-			portf_id = p['portfolioId']
-			break
-	done = False
-	for index, row in loans.iterrows():
-		po += gen_order(portf_id,row)
-		num_orders += 1
-		if (num_orders>=maxorders):
-			done = True
-		if (index<len(loans)-1) and not done:
-			po += ',\n'
-		else:
-			po += '\n'
-		if (done):
-			break
-	po += '\t]\n'
-	po += '}'
-	return po
 
 def create_portf(name,desc):
 	url = get_url(1,'portfolios')

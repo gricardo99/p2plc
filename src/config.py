@@ -1,29 +1,18 @@
 import json
 import os
 import glob
-import netrc
 
-with open('config/config.json', 'r') as f:
-    config = json.load(f)
+import lcaccount
 
-base_url = config['baseUrl']  + config['apiVer'];
-info = netrc.netrc()
-config['investorId'], account, config['apiKey'] = info.authenticators("api.lendingclub.com")
-acct_suffix_url = '/accounts/' + config['investorId'];
-myheaders = {'Authorization': config['apiKey'], 'content-type': 'application/json'}
+default_config_file = 'config/config.json'
 
-portfolio_path = "config/portfolio/"
-port_l = []
-config['portfolios'] = []
-for file in glob.glob(portfolio_path + "*.json"):
-	port_name = (os.path.splitext(os.path.basename(file))[0]).upper();
-	with open(file, 'r') as f:
-		cur_port = json.load(f)
-		config['portfolios'].append(cur_port)
+def load_config_file(cfgfile=default_config_file):
+	with open(cfgfile, 'r') as f:
+		return json.load(f)
 
-def get_url( acct,action ):
-	if (acct) :
-		suf = acct_suffix_url
-	else :
-		suf = ''
-	return base_url + suf + "/" + action;
+def load_config():
+	cfg = load_config_file()
+	cfg['investorId'], account, cfg['apiKey'] = lcaccount.load_account()
+	return cfg
+
+
