@@ -74,20 +74,12 @@ def add_orders(ords,pf,loans):
 				break
 	return ords
 
-def send_orders(ords,resp_logfile,ords_logfile):
-	logging.debug("order_payload_name:%s",ords_logfile)
-	pyld_f = open(ords_logfile, 'w')
-	logging.debug("created order file.");
+def send_orders(ords):
 	order_url = get_url(1,'orders')
 	logging.debug("order_url:%s",order_url)
 	logging.debug("order payload:%s",ords)
-	json.dump(ords,pyld_f)
 	ordresp = session.post(order_url, headers=headers, data=json.dumps(ords))
 	logging.debug("ordresp:%s",ordresp)
-	if (ordresp.status_code == 200):
-		logging.debug("order_resp_name:%s",resp_logfile)
-		resp_f = open(resp_logfile, 'w')
-		json.dump(ordresp.json(),resp_f)
 	return ordresp
 
 
@@ -137,7 +129,7 @@ lsum_cols = ['term','intRate','fundedAmount','loanAmount','installment','purpose
 if datasrc == 'url':
 	mydf = get_loan_list()
 if datasrc == 'file':
-	file_name = "data/pandas/2017.02.15/newlisted_02PM_00:01.pkl"
+	file_name = "data/pandas/2017.02.22/newlisted_10AM_00:02.pkl"
 	mydf = get_loan_list_file(file_name)
 
 if datasrc != 'file':
@@ -145,8 +137,10 @@ if datasrc != 'file':
 	mydf.to_pickle(dirname + '/' + newlisted_f) 
 all_ords = parent_order();
 
+submitted_ords = { 'todayOrders' : []}
+resp_ords = { 'todayOrderConfirmations': [] }
 portfolios.load_portfolios()
-portfolios.load_order_hist(order_payload_name,order_resp_name)
+portfolios.load_order_hist(order_payload_name,order_resp_name,submitted_ords,resp_ords)
 
 for pn in portfolios.pfls.keys():
 	pf = portfolios.pfls[pn]
@@ -166,13 +160,23 @@ for pn in portfolios.pfls.keys():
 		open(portmatch_f, 'a').close()
 
 if (all_ords['orders']):
-	ord_resp = send_orders(all_ords,order_resp_name,order_payload_name)
+	submitted_ords['todayOrders'].append(all_ords)
+	pyld_f = open(order_payload_name, 'w')
+	json.dump(submitted_ords,pyld_f)
+	logging.debug("wrote order_payload_name:%s",order_payload_name)
+	logging.debug("all ords today:")
+	logging.debug(submitted_ords)
+	ord_resp = send_orders(all_ords)
 	logging.debug("order status_code:%s",ord_resp.status_code);
 	if ord_resp.status_code == 200:
 		logging.debug("order success")
-		logging.debug(ord_resp.json())
-		ord_resp_j = ord_resp.json()
-		portfolios.update_ids(all_ords['orders'],ord_resp_j['orderConfirmations'])
+		cur_ord_resp_j = ord_resp.json()
+		logging.debug(cur_ord_resp_j)
+		logging.debug("order_resp_name:%s",order_resp_name)
+		resp_ords['todayOrderConfirmations'].append(cur_ord_resp_j)
+		resp_f = open(order_resp_name, 'w')
+		json.dump(resp_ords,resp_f)
+		portfolios.update_ids(all_ords['orders'],cur_ord_resp_j['orderConfirmations'])
 	else:
 		logging.debug("order failed!");
 		try:
