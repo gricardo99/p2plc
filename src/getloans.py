@@ -33,7 +33,7 @@ import portfolios
 config = config.load_config()
 base_url = config['baseUrl']  + config['apiVer'];
 acct_suffix_url = '/accounts/' + config['investorId'];
-headers = {'Authorization': config['apiKey'], 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-LC-LISTING-VERSION': '1.1'}
+headers = {'Authorization': config['apiKey'], 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-LC-LISTING-VERSION': '1.3'}
 
 def get_url( acct,action ):
         if (acct) :
@@ -59,6 +59,8 @@ def get_loan_list():
 			sys.exit ()
 	else:
 		logging.debug("get loan list returned status code:%d",loan_list.status_code)
+		json_err = loan_list.json()
+		logging.debug("get loan list returned error json:%s",json_err)
 		sys.exit ()
 
 def parent_order():

@@ -1,7 +1,7 @@
 { 
 	"portfolioName": "HR1",
 	"portfolioId": 101192064,
-	"maxDayOrders": 1,
+	"maxDayOrders": 5,
 	"orderAmount": 25,
 	"excludeSameMember": "True",
 	"excludeSameLoan": "True",
